@@ -28,7 +28,15 @@ const fetchUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 ],
             }
             : {};
-        const users = yield User_1.default.find(Object.assign(Object.assign({}, keyword), { _id: { $ne: req.user._id } }));
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const users = yield User_1.default.find(Object.assign(Object.assign({}, keyword), { _id: { $ne: req.user._id } }))
+            .select("username email")
+            .sort({ username: 1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
         if (users.length === 0) {
             return res.status(404).json({
                 success: false,

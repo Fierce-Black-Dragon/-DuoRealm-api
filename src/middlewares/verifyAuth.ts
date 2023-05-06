@@ -8,6 +8,8 @@ const verifyJWT = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
+    console.log("Authorization header is missing or in the wrong format");
+    console.log(authHeader);
     return res.sendStatus(401);
   }
 
@@ -25,7 +27,7 @@ const verifyJWT = async (req: Request, res: Response, next: NextFunction) => {
     req.user = foundUser;
     next();
   } catch (err) {
-    console.log(err);
+    console.log("JWT verification error:", err);
     return res.sendStatus(403);
   }
 };

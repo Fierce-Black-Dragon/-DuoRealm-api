@@ -14,18 +14,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createPersonalChat = void 0;
 const Chat_1 = __importDefault(require("../models/Chat"));
-const Message_1 = __importDefault(require("../models/Message"));
 const createPersonalChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { reciever } = req.body;
+        const { receiver } = req.body;
+        // validate that receiver is provided in the request body
+        if (!receiver) {
+            return res.status(400).json({ success: false, error: "Receiver is required" });
+        }
         const currentuser = req.user.id;
-        const members = [reciever, currentuser];
+        const members = [receiver, currentuser];
         // check if there is an existing chat document with the same members
         const existingChat = yield Chat_1.default.findOne({ members: { $all: members } });
         if (existingChat) {
             return res.status(200).json({
                 success: true,
-                message: "chatfound",
+                message: "chat found",
                 existingChat,
             });
         }
@@ -42,64 +45,3 @@ const createPersonalChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.createPersonalChat = createPersonalChat;
-const getUserChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const currentuser = req.user.id;
-        const existingChats = yield Chat_1.default.find({ members: { $in: [currentuser] } });
-        if (existingChats.length === 0) {
-            res.status(200).json({
-                success: true,
-                message: "No chats",
-                existingChats: [],
-            });
-        }
-        res.status(200).json({
-            success: true,
-            message: "All chats",
-            existingChats,
-        });
-    }
-    catch (error) {
-        res.status(500).json({ sucess: false, error: "Server error" });
-    }
-});
-const getUserChatByID = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const chatId = req.params.id;
-        const existingChat = yield Chat_1.default.findById(chatId);
-        if (!existingChat) {
-            res.status(404).json({
-                success: false,
-                message: "No chat found",
-            });
-        }
-        res.status(200).json({
-            success: true,
-            message: "chat found",
-            existingChat,
-        });
-    }
-    catch (error) {
-        res.status(500).json({ sucess: false, error: "Server error" });
-    }
-});
-const addMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { chatId } = req.params;
-    const { sender, content, type } = req.body;
-    try {
-        const personalChatMessenger = yield Message_1.default.findOne({ chatId: chatId });
-        // PersonalChat.findByIdAndUpdate(chatId, {
-        //   $push: { messages: { sender, content } }
-        // });
-        if (!personalChatMessenger) {
-            return res
-                .status(404)
-                .json({ error: "Messages not found for this chat" });
-        }
-        // res.status(200).json(chat);
-    }
-    catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Server error" });
-    }
-});

@@ -8,4 +8,5 @@ const chatController_1 = require("../controllers/chatController");
 const verifyAuth_1 = __importDefault(require("../middlewares/verifyAuth"));
 const router = express_1.default.Router();
 router.route("/create").post(verifyAuth_1.default, chatController_1.createPersonalChat);
+router.route("/@me").get(verifyAuth_1.default, chatController_1.getUserChats);
 exports.default = router;

@@ -28,6 +28,7 @@ const cookieGenerator = (user, res, message) => __awaiter(void 0, void 0, void 0
             access_token: accessToken,
             email: user.email, isloggedin: true,
             name: user.name,
+            id: user._id,
             message: message,
         },
     });

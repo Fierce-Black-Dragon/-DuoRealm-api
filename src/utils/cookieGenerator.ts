@@ -23,6 +23,7 @@ const cookieGenerator = async (user: any, res: any, message: string) => {
         access_token: accessToken,
         email:user.email,isloggedin:true,
         name: user.name,
+        id:user._id,
         message: message,
        },
 

@@ -20,17 +20,12 @@ const cookieGenerator = (user, res, message) => __awaiter(void 0, void 0, void 0
     //refreshToken
     const refreshToken = yield user.jwtRefreshTokenCreation();
     user.password = undefined;
+    const userWithAccessToken = Object.assign({}, user);
     //cookie creations
     res.cookie("token", refreshToken, options);
     res.status(200).json({
         success: true,
-        data: {
-            access_token: accessToken,
-            email: user.email, isloggedin: true,
-            name: user.name,
-            id: user._id,
-            message: message,
-        },
+        data: Object.assign(Object.assign({}, userWithAccessToken["_doc"]), { access_token: accessToken }),
     });
 });
 exports.default = cookieGenerator;

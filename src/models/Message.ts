@@ -7,10 +7,6 @@ const personalMessageSchema = new Schema(
       type: String,
       enum: ["Text", "Media", "Document", "Link"],
     },
-    created_at: {
-      type: Date,
-      default: Date.now(),
-    },
     content: { type: String, trim: true },
     readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 

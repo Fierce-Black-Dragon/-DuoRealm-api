@@ -12,8 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserChats = exports.createPersonalChat = void 0;
+exports.getUserChatByID = exports.getUserChats = exports.createPersonalChat = void 0;
 const Chat_1 = __importDefault(require("../models/Chat"));
+const Message_1 = __importDefault(require("../models/Message"));
 const createPersonalChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { receiver } = req.body;
@@ -64,3 +65,28 @@ const getUserChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.getUserChats = getUserChats;
+const getUserChatByID = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { chatID } = req.params;
+        const messages = yield Message_1.default.find({ chatId: chatID }).populate("members");
+        if (!messages) {
+            return res.status(404).json({
+                success: false,
+                message: "Chat not found",
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            message: "messages",
+            messages,
+        });
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: "Server error",
+        });
+    }
+});
+exports.getUserChatByID = getUserChatByID;

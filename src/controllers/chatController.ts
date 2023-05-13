@@ -57,5 +57,30 @@ const getUserChats = async (req: any, res: Response) => {
     res.status(500).json({ success: false, error: "Server error" });
   }
 };
+const getUserChatByID = async (req: Request, res: Response) => {
+  try {
+    const { chatID } = req.params;
 
-export { createPersonalChat, getUserChats };
+    const messages = await PesonalMessage.find({chatId:chatID}).populate("members")
+
+    if (!messages) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "messages",
+      messages,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      error: "Server error",
+    });
+  }
+};
+export { createPersonalChat, getUserChats,getUserChatByID };

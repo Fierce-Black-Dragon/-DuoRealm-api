@@ -20,20 +20,26 @@ const cookieGenerator_1 = __importDefault(require("../utils/cookieGenerator"));
 const filterReqData_1 = __importDefault(require("../utils/filterReqData"));
 const handleLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, username, password } = req.body;
-    console.log("first", !email || !username);
-    if ((!email && !username) || !password)
+    if ((!email && !username) || !password) {
+        console.log("first", !email || !username);
         return res.status(400).json({
             success: false,
             message: " All feilds  are required",
         });
+    }
     const filteredBody = (0, filterReqData_1.default)(req.body, "password", "username", "email");
-    let foundUser = yield User_1.default.findOne({ $or: [{ email: filteredBody === null || filteredBody === void 0 ? void 0 : filteredBody.username }, { username: filteredBody === null || filteredBody === void 0 ? void 0 : filteredBody.email }] })
+    let foundUser = yield User_1.default.findOne({
+        $or: [{ email: filteredBody === null || filteredBody === void 0 ? void 0 : filteredBody.username }, { username: filteredBody === null || filteredBody === void 0 ? void 0 : filteredBody.email }],
+    })
         .select("+password")
         .exec();
     // if (email)
     // =usergiveType
     if (!foundUser)
-        return res.sendStatus(401); //Unauthorized
+        return res.status(401).json({
+            success: false,
+            message: foundUser,
+        }); //Unauthorized
     // evaluate password
     const isPasswordCorrect = yield (foundUser === null || foundUser === void 0 ? void 0 : foundUser.verifyPassword(filteredBody === null || filteredBody === void 0 ? void 0 : filteredBody.password));
     if (isPasswordCorrect) {
@@ -84,40 +90,32 @@ const handleSignup = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.handleSignup = handleSignup;
 const handleRefreshToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const cookies = req.cookies;
-    if (!(cookies === null || cookies === void 0 ? void 0 : cookies.token)) {
-        res.status(401).json({
+    console.log(cookies.token);
+    if (!cookies.token) {
+        console.log("object");
+        return res.status(401).json({
             success: false,
-            message: "Unauthorise user",
+            message: "Unauthorised user",
         });
     }
     const refreshToken = cookies.token;
     res.clearCookie("token", { httpOnly: true, sameSite: "none", secure: true });
-    // const foundUser = await User.findOne({ refreshToken }).exec();
-    // // Detected refresh token reuse!
-    // if (!foundUser) {
-    //     jwt.verify(
-    //         refreshToken,
-    //         process.env.REFRESH_TOKEN_SECRET,
-    //         async (err, decoded) => {
-    //             if (err) return res.sendStatus(403); //Forbidden
-    //             console.log('attempted refresh token reuse!')
-    //             const hackedUser = await User.findOne({ username: decoded.username }).exec();
-    //             hackedUser.refreshToken = [];
-    //             const result = await hackedUser.save();
-    //             console.log(result);
-    //         }
-    //     )
-    //     return res.sendStatus(403); //Forbidden
-    // }
-    // evaluate jwt:obj
-    jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_KEY, (err, decode) => __awaiter(void 0, void 0, void 0, function* () {
-        if (err) {
-            console.log("expired refresh token");
-        }
-        const id = new mongoose_1.default.Types.ObjectId(decode.id);
+    try {
+        const decoded = jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_KEY);
+        const id = new mongoose_1.default.Types.ObjectId(decoded.id);
         const user = yield User_1.default.findById(id);
-        (0, cookieGenerator_1.default)(user, res, "Re-login  Success");
-    }));
+        (0, cookieGenerator_1.default)(user, res, "Re-login Success");
+    }
+    catch (err) {
+        if (err.name === "TokenExpiredError") {
+            return res.status(401).json({
+                success: false,
+                message: "Refresh token has expired",
+            });
+        }
+        console.error(err);
+        return res.status(500).json({ success: false, error: "Server error" });
+    }
 });
 exports.handleRefreshToken = handleRefreshToken;
 const handleLogout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

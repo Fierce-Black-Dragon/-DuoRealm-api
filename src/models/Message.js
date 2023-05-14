@@ -33,8 +33,7 @@ const personalMessageSchema = new mongoose_1.Schema({
     content: { type: String, trim: true },
     readBy: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: "User" }],
     chatId: { type: mongoose_1.default.Types.ObjectId, ref: "Chat", required: true },
-}, { timestamps: true }
-// more fields will be added when required
-);
+    user: { type: mongoose_1.default.Types.ObjectId, ref: "User" }, // Add this field for user reference
+}, { timestamps: true });
 const PesonalMessage = mongoose_1.default.model("PesonalMessage", personalMessageSchema);
 exports.default = PesonalMessage;

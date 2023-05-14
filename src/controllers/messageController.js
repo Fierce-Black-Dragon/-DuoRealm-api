@@ -13,19 +13,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.editMessage = exports.deleteMessage = exports.fetchMessagesByChatID = exports.createMessage = void 0;
+const Chat_1 = __importDefault(require("../models/Chat"));
 const Message_1 = __importDefault(require("../models/Message"));
 const createMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { sender, type = "Text", content } = req.body;
-        const { chatID } = req.params;
+        const { type = "Text", content } = req.body;
+        const sender = req.user._id;
+        const { chatID: chatId } = req.params;
         if (!sender || !content) {
             return res.status(400).json({ success: false, error: "All fields are required." });
         }
-        const chat = yield Message_1.default.create({ sender, type, content, chatID });
+        const chat = yield Chat_1.default.findById(chatId).populate("members");
+        let message = yield Message_1.default.create({ sender, type, content, chatId });
+        message = yield message.populate("sender");
         res.status(200).json({
             success: true,
-            message: "Chat created.",
-            chat,
+            data: {
+                chat: Object.assign(Object.assign({}, chat._doc), { message: message })
+            },
         });
     }
     catch (err) {

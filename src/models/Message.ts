@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document, InferSchemaType } from "mongoose";
-
 const personalMessageSchema = new Schema(
   {
     sender: { type: mongoose.Types.ObjectId, ref: "User", required: true },
@@ -9,12 +8,10 @@ const personalMessageSchema = new Schema(
     },
     content: { type: String, trim: true },
     readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-
     chatId: { type: mongoose.Types.ObjectId, ref: "Chat", required: true },
+    user: { type: mongoose.Types.ObjectId, ref: "User" }, // Add this field for user reference
   },
   { timestamps: true }
-
-  // more fields will be added when required
 );
 
 const PesonalMessage = mongoose.model("PesonalMessage", personalMessageSchema);

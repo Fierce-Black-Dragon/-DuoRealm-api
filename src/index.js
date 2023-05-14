@@ -23,15 +23,13 @@ const port = process.env.PORT || 4000;
 app.use((0, cors_1.default)({
     origin: "http://localhost:5173",
     methods: ["GET", "PATCH", "POST", "DELETE", "PUT"],
-    credentials: true
+    credentials: true,
 }));
-// app.options("*", cors());
-app.options("*", (0, cors_1.default)());
 app.use((0, cookie_parser_1.default)());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
 app.use(body_parser_1.default.json());
 app.use((0, express_session_1.default)({
-    secret: '3dofjiarfngwnfvun',
+    secret: "3dofjiarfngwnfvun",
     resave: false,
     saveUninitialized: false,
     cookie: { secure: false },
@@ -56,10 +54,54 @@ app.use(express_1.default.urlencoded({
 app.use((0, express_mongo_sanitize_1.default)());
 app.use((0, xss_clean_1.default)());
 app.use((0, morgan_1.default)("dev"));
-app.use('/slate/api', index_1.default);
-app.get('/', (req, res) => {
-    res.send('server is live');
+app.use("/slate/api", index_1.default);
+app.get("/", (req, res) => {
+    res.send("server is live");
 });
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
+});
+// Create socket.io server
+const io = require("socket.io")(server, {
+    pingTimeout: 60000,
+    cors: {
+        origin: "http://localhost:5173",
+    },
+});
+const connectedUsers = new Set();
+io.on("connection", (socket) => {
+    console.log("Connected to socket.io");
+    socket.on("setup", (userData) => {
+        if (connectedUsers.has(userData._id)) {
+            console.log("User already connected:", userData);
+            return;
+        }
+        connectedUsers.add(userData._id);
+        socket.emit("connected");
+    });
+    socket.on("join chat", (room) => {
+        socket.join(room);
+        console.log("User Joined Room: " + room);
+    });
+    socket.on("new message", (newMessageReceived) => {
+        //       var chat = newMessageReceived.chat;
+        //       if (!chat.members) return console.log("chat.users not defined");
+        //       chat.members.forEach((user) => {
+        //         console.log(user);
+        //         if (user._id == chat.message.sender?._id) return;
+        // //   console.log(user._id == chat.message.sender?._id,"user._id == chat.message.sender?._id");
+        socket
+            .in("643a9b923b3a9bbb59a41395")
+            .emit("message test", newMessageReceived);
+        //   });
+    });
+    socket.on("disconnect", () => {
+        console.log("Socket disconnected");
+        for (const [userId, socketId] of io.sockets.adapter.rooms.entries()) {
+            if (socketId.has(socket.id)) {
+                connectedUsers.delete(userId);
+                break;
+            }
+        }
+    });
 });

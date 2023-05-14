@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import Chat from "../models/Chat";
-import PesonalMessage from "../models/Message";
+import PersonalMessage from "../models/Message";
 const createPersonalChat = async (req: any, res: Response) => {
   try {
     const { receiver } = req.body;
@@ -60,8 +60,9 @@ const getUserChats = async (req: any, res: Response) => {
 const getUserChatByID = async (req: Request, res: Response) => {
   try {
     const { chatID } = req.params;
-
-    const messages = await PesonalMessage.find({chatId:chatID}).populate("members")
+    const messages = await PersonalMessage.find({ chatId: chatID })
+    .populate("sender")
+    .exec();
 
     if (!messages) {
       return res.status(404).json({

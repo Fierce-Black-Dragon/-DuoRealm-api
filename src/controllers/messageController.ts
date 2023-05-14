@@ -1,27 +1,40 @@
 import { Request, Response } from "express";
 import Chat from "../models/Chat";
 import PersonalMessage from "../models/Message";
+import User from "../models/User";
 export const createMessage = async (req: any, res: Response) => {
   try {
-    const { sender, type = "Text", content } = req.body;
-    const { chatID } = req.params;
+    const { type = "Text", content } = req.body;
+    const sender = req.user._id;
+    const { chatID: chatId } = req.params;
 
     if (!sender || !content) {
       return res.status(400).json({ success: false, error: "All fields are required." });
     }
 
-    const chat = await PersonalMessage.create({ sender, type, content, chatID });
+    const chat = await Chat.findById(chatId).populate("members");
+
+    let message = await PersonalMessage.create({ sender, type, content, chatId });
+ 
+    message = await message.populate("sender");
+    
 
     res.status(200).json({
       success: true,
-      message: "Chat created.",
-      chat,
+      data: {
+     chat:{
+      ...chat._doc,
+      message: message 
+     } 
+      
+      },
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: "Server error." });
   }
 };
+
 export const fetchMessagesByChatID = async (req: any, res: Response) => {
   try {
     const { chatID } = req.params;

@@ -68,7 +68,9 @@ exports.getUserChats = getUserChats;
 const getUserChatByID = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { chatID } = req.params;
-        const messages = yield Message_1.default.find({ chatId: chatID }).populate("members");
+        const messages = yield Message_1.default.find({ chatId: chatID })
+            .populate("sender")
+            .exec();
         if (!messages) {
             return res.status(404).json({
                 success: false,

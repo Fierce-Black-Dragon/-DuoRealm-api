@@ -42,6 +42,7 @@ const userSchema = new mongoose_1.Schema({
     username: {
         type: String,
         required: true,
+        unique: true,
         maxlength: [30, " max 40 character"],
     },
     firstName: {
@@ -57,6 +58,7 @@ const userSchema = new mongoose_1.Schema({
     },
     email: {
         type: String,
+        unique: true,
         required: [true, "Email is required"],
         validate: {
             validator: function (email) {

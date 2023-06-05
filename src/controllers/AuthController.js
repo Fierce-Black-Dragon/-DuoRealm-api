@@ -12,24 +12,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleLogout = exports.handleRefreshToken = exports.handleSignup = exports.handleLogin = void 0;
+exports.validateUserNameOREmail = exports.handleLogout = exports.handleRefreshToken = exports.handleSignup = exports.handleLogin = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = __importDefault(require("../models/User"));
 const cookieGenerator_1 = __importDefault(require("../utils/cookieGenerator"));
 const filterReqData_1 = __importDefault(require("../utils/filterReqData"));
 const handleLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, username, password } = req.body;
-    if ((!email && !username) || !password) {
-        console.log("first", !email || !username);
+    const { userCred, password } = req.body;
+    if ((!userCred) || !password) {
         return res.status(400).json({
             success: false,
             message: " All feilds  are required",
         });
     }
-    const filteredBody = (0, filterReqData_1.default)(req.body, "password", "username", "email");
+    const filteredBody = (0, filterReqData_1.default)(req.body, "password", "userCred");
     let foundUser = yield User_1.default.findOne({
-        $or: [{ email: filteredBody === null || filteredBody === void 0 ? void 0 : filteredBody.username }, { username: filteredBody === null || filteredBody === void 0 ? void 0 : filteredBody.email }],
+        $or: [{ email: filteredBody === null || filteredBody === void 0 ? void 0 : filteredBody.userCred }, { username: filteredBody === null || filteredBody === void 0 ? void 0 : filteredBody.userCred }],
     })
         .select("+password")
         .exec();
@@ -57,33 +56,50 @@ const handleSignup = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const { email, password, lastName, firstName, username } = req.body;
         if (!email || !password || !lastName || !firstName) {
-            res.status(400).json({
+            return res.status(400).json({
                 success: false,
-                message: " All feilds  are required",
+                message: "All fields are required",
             });
-        } //finding if user is already register
-        const filteredBody = (0, filterReqData_1.default)(req.body, "firstName", "lastName", "email", "password", "username");
-        if (!filteredBody["username"]) {
-            filteredBody["username"] = filteredBody.email;
         }
-        const existingUser = yield User_1.default.findOne({ email: email });
+        // Check if the user already exists
+        const existingUser = yield User_1.default.findOne({ $or: [{ email }, { username }] }, { email: 1, username: 1 });
         if (existingUser) {
-            res.status(403).json({
-                success: false,
-                message: `${existingUser.email} is already been registered`,
-            });
+            if (existingUser.email === email) {
+                return res.status(409).json({
+                    success: false,
+                    message: `${existingUser.email} is already registered`,
+                });
+            }
+            else if (existingUser.username === username) {
+                return res.status(409).json({
+                    success: false,
+                    message: `${existingUser.username} is already taken, please choose a different username`,
+                });
+            }
         }
-        //creating user in mongo db
+        // Assign default value for username
+        const filteredBody = {
+            firstName,
+            lastName,
+            email,
+            password,
+            username: username || email,
+        };
+        // Create user in MongoDB
         const user = new User_1.default(filteredBody);
         yield user.save();
-        console.log(user, "===========2");
-        //token creation function
-        (0, cookieGenerator_1.default)(user, res, "Register Succesfully");
+        // Token creation function
+        (0, cookieGenerator_1.default)(user, res, "Registered Successfully");
+        // Return success response
+        return res.json({
+            success: true,
+            message: "User registered successfully",
+        });
     }
     catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
-            message: error,
+            message: error.message,
         });
     }
 });
@@ -130,3 +146,14 @@ const handleLogout = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     });
 });
 exports.handleLogout = handleLogout;
+const validateUserNameOREmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { query } = req.params;
+    console.log(query);
+    let alreadyExist = yield User_1.default.findOne({
+        $or: [{ email: query }, { username: query }],
+    });
+    if (alreadyExist)
+        return res.status(200).send(true);
+    res.status(200).send(false);
+});
+exports.validateUserNameOREmail = validateUserNameOREmail;

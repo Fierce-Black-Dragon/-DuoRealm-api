@@ -27,6 +27,7 @@ const userSchema = new Schema<User>(
     username: {
       type: String,
       required: true,
+      unique:true,
       maxlength: [30, " max 40 character"],
     },
     firstName: {
@@ -42,6 +43,7 @@ const userSchema = new Schema<User>(
     },
     email: {
       type: String,
+      unique:true,
       required: [true, "Email is required"],
       validate: {
         validator: function (email: any) {
@@ -50,7 +52,8 @@ const userSchema = new Schema<User>(
             .match(
               /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             );
-        },
+        }, 
+  
         message: (props: any) => `Email (${props.value}) is invalid!`,
       },
     },

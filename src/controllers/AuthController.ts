@@ -7,18 +7,18 @@ import cookieGenerator from "../utils/cookieGenerator";
 import filterObj from "../utils/filterReqData";
 
 const handleLogin = async (req: Request, res: Response) => {
-  const { email, username, password } = req.body;
-  if ((!email && !username) || !password) {
-    console.log("first", !email || !username);
+  const { userCred, password } = req.body;
+  if ((!userCred) || !password) {
+
     return res.status(400).json({
       success: false,
       message: " All feilds  are required",
     });
   }
-  const filteredBody = filterObj(req.body, "password", "username", "email");
+  const filteredBody = filterObj(req.body, "password", "userCred");
 
   let foundUser = await User.findOne({
-    $or: [{ email: filteredBody?.username }, { username: filteredBody?.email }],
+    $or: [{ email: filteredBody?.userCred }, { username: filteredBody?.userCred }],
   })
 
     .select("+password")
@@ -49,40 +49,55 @@ const handleSignup = async (req: Request, res: Response) => {
     const { email, password, lastName, firstName, username } = req.body;
 
     if (!email || !password || !lastName || !firstName) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
-        message: " All feilds  are required",
+        message: "All fields are required",
       });
-    } //finding if user is already register
-
-    const filteredBody = filterObj(
-      req.body,
-      "firstName",
-      "lastName",
-      "email",
-      "password",
-      "username"
+    }
+    // Check if the user already exists
+    const existingUser = await User.findOne(
+      { $or: [{ email }, { username }] },
+      { email: 1, username: 1 }
     );
-    if (!filteredBody["username"]) {
-      filteredBody["username"] = filteredBody.email;
-    }
-    const existingUser = await User.findOne({ email: email });
     if (existingUser) {
-      res.status(403).json({
-        success: false,
-        message: `${existingUser.email} is already been registered`,
-      });
+      if (existingUser.email === email) {
+        return res.status(409).json({
+          success: false,
+          message: `${existingUser.email} is already registered`,
+        });
+      } else if (existingUser.username === username) {
+        return res.status(409).json({
+          success: false,
+          message: `${existingUser.username} is already taken, please choose a different username`,
+        });
+      }
     }
-    //creating user in mongo db
+
+    // Assign default value for username
+    const filteredBody = {
+      firstName,
+      lastName,
+      email,
+      password,
+      username: username || email,
+    };
+
+    // Create user in MongoDB
     const user = new User(filteredBody);
     await user.save();
-    console.log(user, "===========2");
-    //token creation function
-    cookieGenerator(user, res, "Register Succesfully");
-  } catch (error) {
-    res.status(500).json({
+
+    // Token creation function
+    cookieGenerator(user, res, "Registered Successfully");
+
+    // Return success response
+    return res.json({
+      success: true,
+      message: "User registered successfully",
+    });
+  } catch (error:any) {
+    return res.status(500).json({
       success: false,
-      message: error,
+      message: error.message,
     });
   }
 };
@@ -103,7 +118,10 @@ const handleRefreshToken = async (req: Request, res: Response) => {
   res.clearCookie("token", { httpOnly: true, sameSite: "none", secure: true });
 
   try {
-    const decoded :any= jwt.verify(refreshToken, process.env.REFRESH_KEY as Secret);
+    const decoded: any = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_KEY as Secret
+    );
     const id = new mongoose.Types.ObjectId(decoded.id);
 
     const user = await User.findById(id);
@@ -133,4 +151,20 @@ const handleLogout = async (req: Request, res: Response) => {
   });
 };
 
-export { handleLogin, handleSignup, handleRefreshToken, handleLogout };
+const validateUserNameOREmail = async (req: Request, res: Response) => {
+  const { query } = req.params;
+  console.log(query);
+  let alreadyExist = await User.findOne({
+    $or: [{ email: query }, { username: query }],
+  });
+  if (alreadyExist) return res.status(200).send(true);
+  res.status(200).send(false);
+};
+
+export {
+  handleLogin,
+  handleSignup,
+  handleRefreshToken,
+  handleLogout,
+  validateUserNameOREmail,
+};

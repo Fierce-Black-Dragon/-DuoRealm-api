@@ -8,6 +8,7 @@ const AuthController_1 = require("../controllers/AuthController");
 const router = express_1.default.Router();
 router.post("/signup", AuthController_1.handleSignup);
 router.post("/login", AuthController_1.handleLogin);
+router.get("/validate/:query", AuthController_1.validateUserNameOREmail);
 router.get("/refresh", AuthController_1.handleRefreshToken);
 router.get("/logout", AuthController_1.handleLogout);
 exports.default = router;

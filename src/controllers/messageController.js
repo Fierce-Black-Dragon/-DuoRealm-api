@@ -29,7 +29,7 @@ const createMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         res.status(200).json({
             success: true,
             data: {
-                chat: Object.assign(Object.assign({}, chat._doc), { message: message })
+                message: message
             },
         });
     }

@@ -53,10 +53,17 @@ const getUserChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const currentUserId = req.user.id;
         // find all chats where the current user is a member
         const chats = yield Chat_1.default.find({ members: currentUserId }).populate("members");
+        const filteredChats = chats.map((chat) => {
+            const filteredMembers = chat.members.filter((member) => member._id.toString() !== currentUserId);
+            return {
+                _id: chat._id,
+                receiver: filteredMembers[0],
+            };
+        });
         res.status(200).json({
             success: true,
             message: "user chats",
-            chats,
+            chats: filteredChats,
         });
     }
     catch (err) {
@@ -68,19 +75,27 @@ exports.getUserChats = getUserChats;
 const getUserChatByID = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { chatID } = req.params;
+        const chat = yield Chat_1.default.findById(chatID).populate("members");
         const messages = yield Message_1.default.find({ chatId: chatID })
             .populate("sender")
             .exec();
+        const receiver = chat === null || chat === void 0 ? void 0 : chat.members.find((member) => { var _a; return member.id.toString() !== ((_a = req.user) === null || _a === void 0 ? void 0 : _a._id.toString()); });
+        console.log(receiver);
         if (!messages) {
             return res.status(404).json({
                 success: false,
                 message: "Chat not found",
             });
         }
+        let data = Object.assign({}, chat);
+        data = data["_doc"];
+        if (chat) {
+            delete data.members;
+        }
         return res.status(200).json({
             success: true,
             message: "messages",
-            messages,
+            data: Object.assign(Object.assign({}, data), { receiver, messages }),
         });
     }
     catch (error) {

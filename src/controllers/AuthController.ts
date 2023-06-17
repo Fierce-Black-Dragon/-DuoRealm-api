@@ -28,7 +28,7 @@ const handleLogin = async (req: Request, res: Response) => {
   if (!foundUser)
     return res.status(401).json({
       success: false,
-      message: foundUser,
+      message: 'no use found ',
     }); //Unauthorized
   // evaluate password
   const isPasswordCorrect = await foundUser?.verifyPassword(

@@ -18,7 +18,7 @@ const cookieGenerator = async (user: any, res: any, message: string) => {
   res.cookie("token", refreshToken, options);
   res.status(200).json({
     success: true,
-    data: {
+    user: {
         ...userWithAccessToken["_doc"],
         access_token: accessToken,
     },

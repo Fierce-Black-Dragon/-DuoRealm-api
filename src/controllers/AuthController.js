@@ -37,7 +37,7 @@ const handleLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (!foundUser)
         return res.status(401).json({
             success: false,
-            message: foundUser,
+            message: 'no use found ',
         }); //Unauthorized
     // evaluate password
     const isPasswordCorrect = yield (foundUser === null || foundUser === void 0 ? void 0 : foundUser.verifyPassword(filteredBody === null || filteredBody === void 0 ? void 0 : filteredBody.password));

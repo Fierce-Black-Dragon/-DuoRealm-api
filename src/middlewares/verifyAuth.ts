@@ -10,7 +10,7 @@ const verifyJWT = async (req: Request, res: Response, next: NextFunction) => {
   if (!authHeader?.startsWith("Bearer ")) {
     console.log("Authorization header is missing or in the wrong format");
     console.log(authHeader);
-    return res.sendStatus(401);
+    return res.sendStatus(204);
   }
 
   const token = authHeader.split(" ")[1];

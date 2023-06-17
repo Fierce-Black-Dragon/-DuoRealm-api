@@ -12,6 +12,7 @@ import router from "./routes/index";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import { Server, Socket } from "socket.io";
+import handleSocket from "./lib/socket";
 import User from "./models/User";
 
 dotenv.config();
@@ -87,50 +88,6 @@ const io = require("socket.io")(server, {
   },
 });
 
-const connectedUsers = new Set();
-
-io.on("connection", (socket) => {
-  console.log("Connected to socket.io");
-
-  socket.on("setup", (userData) => {
-    if (connectedUsers.has(userData._id)) {
-      console.log("User already connected:", userData);
-      return;
-    }
-
-    connectedUsers.add(userData._id);
-    socket.emit("connected");
-  });
-
-  socket.on("join chat", (room) => {
-    socket.join(room);
-    console.log("User Joined Room: " + room);
-  });
-
-  socket.on("new message", (newMessageReceived: any) => {
-    //       var chat = newMessageReceived.chat;
-    //       if (!chat.members) return console.log("chat.users not defined");
-
-    //       chat.members.forEach((user) => {
-    //         console.log(user);
-    //         if (user._id == chat.message.sender?._id) return;
-    // //   console.log(user._id == chat.message.sender?._id,"user._id == chat.message.sender?._id");
-
-    socket
-      .in("643a9b923b3a9bbb59a41395")
-      .emit("message test", newMessageReceived);
-    //   });
-  });
-
-  socket.on("disconnect", () => {
-    console.log("Socket disconnected");
-    for (const [userId, socketId] of io.sockets.adapter.rooms.entries()) {
-      if (socketId.has(socket.id)) {
-        connectedUsers.delete(userId);
-        break;
-      }
-    }
-  });
+io.on("connection", (socket: Socket) => {
+  handleSocket(io, socket);
 });
-
-// end 

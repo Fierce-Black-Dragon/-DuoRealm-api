@@ -19,7 +19,7 @@ const verifyJWT = (req, res, next) => __awaiter(void 0, void 0, void 0, function
     if (!(authHeader === null || authHeader === void 0 ? void 0 : authHeader.startsWith("Bearer "))) {
         console.log("Authorization header is missing or in the wrong format");
         console.log(authHeader);
-        return res.sendStatus(401);
+        return res.sendStatus(204);
     }
     const token = authHeader.split(" ")[1];
     try {

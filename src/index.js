@@ -16,6 +16,7 @@ const express_mongo_sanitize_1 = __importDefault(require("express-mongo-sanitize
 const index_1 = __importDefault(require("./routes/index"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const body_parser_1 = __importDefault(require("body-parser"));
+const socket_1 = __importDefault(require("./lib/socket"));
 dotenv_1.default.config();
 require("./config/db.ts").connect(mongoose_1.default);
 const app = (0, express_1.default)();
@@ -68,41 +69,6 @@ const io = require("socket.io")(server, {
         origin: "http://localhost:5173",
     },
 });
-const connectedUsers = new Set();
 io.on("connection", (socket) => {
-    console.log("Connected to socket.io");
-    socket.on("setup", (userData) => {
-        if (connectedUsers.has(userData._id)) {
-            console.log("User already connected:", userData);
-            return;
-        }
-        connectedUsers.add(userData._id);
-        socket.emit("connected");
-    });
-    socket.on("join chat", (room) => {
-        socket.join(room);
-        console.log("User Joined Room: " + room);
-    });
-    socket.on("new message", (newMessageReceived) => {
-        //       var chat = newMessageReceived.chat;
-        //       if (!chat.members) return console.log("chat.users not defined");
-        //       chat.members.forEach((user) => {
-        //         console.log(user);
-        //         if (user._id == chat.message.sender?._id) return;
-        // //   console.log(user._id == chat.message.sender?._id,"user._id == chat.message.sender?._id");
-        socket
-            .in("643a9b923b3a9bbb59a41395")
-            .emit("message test", newMessageReceived);
-        //   });
-    });
-    socket.on("disconnect", () => {
-        console.log("Socket disconnected");
-        for (const [userId, socketId] of io.sockets.adapter.rooms.entries()) {
-            if (socketId.has(socket.id)) {
-                connectedUsers.delete(userId);
-                break;
-            }
-        }
-    });
+    (0, socket_1.default)(io, socket);
 });
-// end 

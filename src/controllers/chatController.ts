@@ -46,35 +46,55 @@ const getUserChats = async (req: any, res: Response) => {
     const chats = await Chat.find({ members: currentUserId }).populate(
       "members"
     );
+    const filteredChats = chats.map((chat) => {
+      const filteredMembers = chat.members.filter(
+        (member) => member._id.toString() !== currentUserId
+      );
+
+      return {
+        _id: chat._id,
+        receiver: filteredMembers[0],
+      };
+    });
 
     res.status(200).json({
       success: true,
       message: "user chats",
-      chats,
+      chats: filteredChats,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: "Server error" });
   }
 };
-const getUserChatByID = async (req: Request, res: Response) => {
+const getUserChatByID = async (req: any, res: Response) => {
   try {
     const { chatID } = req.params;
+    const chat = await Chat.findById(chatID).populate(
+      "members"
+    );
     const messages = await PersonalMessage.find({ chatId: chatID })
-    .populate("sender")
-    .exec();
-
+      .populate("sender")
+      .exec();
+      const receiver = chat?.members.find((member)=>member.id.toString() !== req.user?._id.toString())
+      console.log(receiver)
     if (!messages) {
       return res.status(404).json({
         success: false,
         message: "Chat not found",
       });
     }
-
+    let data:any = {...chat}
+    data = data["_doc"]
+    if (chat) {
+      delete data.members;
+    }
+    
     return res.status(200).json({
       success: true,
       message: "messages",
-      messages,
+      data:
+        {...data,receiver,messages},
     });
   } catch (error) {
     console.error(error);
@@ -84,4 +104,4 @@ const getUserChatByID = async (req: Request, res: Response) => {
     });
   }
 };
-export { createPersonalChat, getUserChats,getUserChatByID };
+export { createPersonalChat, getUserChats, getUserChatByID };

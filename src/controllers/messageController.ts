@@ -22,10 +22,8 @@ export const createMessage = async (req: any, res: Response) => {
     res.status(200).json({
       success: true,
       data: {
-     chat:{
-      ...chat._doc,
+
       message: message 
-     } 
       
       },
     });
